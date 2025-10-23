@@ -1,0 +1,58 @@
+-- Crear base de datos
+IF DB_ID(N'ProyectoFinalDB') IS NULL
+BEGIN
+    CREATE DATABASE ProyectoFinalDB;
+END
+GO
+
+USE ProyectoFinalDB;
+GO
+
+-- Tabla: Personas
+IF OBJECT_ID(N'dbo.Personas', N'U') IS NOT NULL
+    DROP TABLE dbo.Personas;
+GO
+
+CREATE TABLE dbo.Personas
+(
+    IdPersona       INT IDENTITY(1,1) CONSTRAINT PK_Personas PRIMARY KEY,
+    Nombre          NVARCHAR(120) NOT NULL,
+    DPI             CHAR(13)      NOT NULL, -- DPI de Guatemala (13 dígitos)
+
+    -- Un DPI por persona, solo números
+    CONSTRAINT UQ_Personas_DPI UNIQUE (DPI),
+    CONSTRAINT CK_Personas_DPI_Numerico CHECK (DPI NOT LIKE '%[^0-9]%')
+);
+GO
+
+-- Tabla: CambiosDivisas
+IF OBJECT_ID(N'dbo.CambiosDivisas', N'U') IS NOT NULL
+    DROP TABLE dbo.CambiosDivisas;
+GO
+
+CREATE TABLE dbo.CambiosDivisas
+(
+    IdCambio            INT IDENTITY(1,1) CONSTRAINT PK_CambiosDivisas PRIMARY KEY,
+    IdPersona           INT         NOT NULL,
+    MontoQuetzales      DECIMAL(18,2) NOT NULL,
+    MontoDolares        DECIMAL(18,2) NOT NULL,
+    FechaHoraCambio     DATETIME2(0)  NOT NULL 
+        CONSTRAINT DF_CambiosDivisas_FechaHora DEFAULT SYSDATETIME(),
+
+    -- Montos no negativos
+    CONSTRAINT CK_CambiosDivisas_MontosNoNegativos 
+        CHECK (MontoQuetzales >= 0 AND MontoDolares >= 0),
+
+    -- Relación con Personas (1 a muchos)
+    CONSTRAINT FK_CambiosDivisas_Personas
+        FOREIGN KEY (IdPersona) 
+        REFERENCES dbo.Personas (IdPersona)
+        ON DELETE CASCADE   -- si se elimina la persona, se eliminan sus cambios
+        ON UPDATE NO ACTION
+);
+GO
+
+-- Índices recomendados para consultas frecuentes
+CREATE NONCLUSTERED INDEX IX_CambiosDivisas_IdPersona_Fecha
+    ON dbo.CambiosDivisas (IdPersona, FechaHoraCambio);
+GO
