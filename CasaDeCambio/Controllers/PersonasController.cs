@@ -1,4 +1,5 @@
 ﻿using CasaDeCambio.Data;
+using CasaDeCambio.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,7 +31,30 @@ namespace CasaDeCambio.Controllers
             return View(lista);
         }
 
+        public IActionResult Create() => View();
 
-    
+        // POST: Personas/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("IdPersona,Nombre,DPI")] Persona persona)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Add(persona);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException ex)
+                {
+                    // DPI es único por el índice
+                    ModelState.AddModelError("", $"No se pudo guardar. ¿DPI duplicado? Detalle: {ex.Message}");
+                }
+            }
+            return View(persona);
+        }
+
+
     }
 }
