@@ -1,0 +1,109 @@
+﻿@model CasaDeCambio.Models.CambiosDivisa
+
+@{
+    ViewData["Title"] = "Agregar cambio de divisa";
+}
+
+<h2>Agregar cambio de divisa</h2>
+
+<form asp-action="AddCambio" method="post">
+    @Html.AntiForgeryToken()
+
+    <!-- Id de la persona (viene desde el index) -->
+    <input type="hidden" asp-for="IdPersona" />
+
+    <div class="mb-3">
+        <label class="form-label">Monto en quetzales (Q)</label>
+        <input asp-for="MontoQuetzales" id="MontoQuetzales" class="form-control" type="number" step="0.01" />
+        <span asp-validation-for="MontoQuetzales" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label d-flex justify-content-between align-items-center">
+            <span>Monto en dólares (US$)</span>
+            <button type="button" id="btnTraerTc" class="btn btn-link p-0">Obtener tipo de cambio</button>
+        </label>
+        <input asp-for="MontoDolares" id="MontoDolares" class="form-control" type="number" step="0.01" />
+        <span asp-validation-for="MontoDolares" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <small class="text-muted" id="tcInfo"></small>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // URL pública SIN API KEY
+        const TC_URL = "https://open.er-api.com/v6/latest/USD";
+
+        const txtQ = document.getElementById("MontoQuetzales");
+        const txtUsd = document.getElementById("MontoDolares");
+        const info = document.getElementById("tcInfo");
+        const btn = document.getElementById("btnTraerTc");
+
+        let tcGTQ = null; // aquí vamos a guardar 1 USD en GTQ
+
+        btn.addEventListener("click", async function () {
+            info.textContent = "Consultando tipo de cambio...";
+
+            try {
+                const resp = await fetch(TC_URL);
+                const data = await resp.json();
+
+                // la API devuelve algo como { rates: { GTQ: 7.73, ... } }
+                tcGTQ = data && data.rates && data.rates.GTQ ? data.rates.GTQ : null;
+
+                if (!tcGTQ) {
+                    info.textContent = "No se encontró el tipo de cambio GTQ.";
+                    return;
+                }
+
+                info.textContent = `1 USD = ${tcGTQ.toFixed(4)} GTQ (fuente: open.er-api.com)`;
+
+                // si ya hay dólares escritos, calculamos quetzales
+                const usdVal = parseFloat(txtUsd.value);
+                if (!isNaN(usdVal) && usdVal > 0) {
+                    txtQ.value = (usdVal * tcGTQ).toFixed(2);
+                }
+
+                // si ya hay quetzales escritos, calculamos dólares
+                const qVal = parseFloat(txtQ.value);
+                if (!isNaN(qVal) && qVal > 0) {
+                    txtUsd.value = (qVal / tcGTQ).toFixed(2);
+                }
+
+            } catch (err) {
+                console.error(err);
+                info.textContent = "Error al obtener el tipo de cambio.";
+            }
+        });
+
+        // opcional: si el usuario cambia Q manualmente y ya tenemos tc, recalculamos USD
+        txtQ.addEventListener("input", function () {
+            if (tcGTQ) {
+                const qVal = parseFloat(txtQ.value);
+                if (!isNaN(qVal)) {
+                    txtUsd.value = (qVal / tcGTQ).toFixed(2);
+                }
+            }
+        });
+
+        // opcional: si el usuario cambia USD manualmente y ya tenemos tc, recalculamos Q
+        txtUsd.addEventListener("input", function () {
+            if (tcGTQ) {
+                const usdVal = parseFloat(txtUsd.value);
+                if (!isNaN(usdVal)) {
+                    txtQ.value = (usdVal * tcGTQ).toFixed(2);
+                }
+            }
+        });
+    </script>
+}

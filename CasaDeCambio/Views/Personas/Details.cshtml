@@ -1,0 +1,21 @@
+﻿@model CasaDeCambio.Models.Persona
+
+
+@{
+    ViewData["Title"] = "Detalles de Persona";
+}
+
+<h2>Detalles de Persona</h2>
+
+<div class="card p-3">
+    <dl class="row">
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">@Model.Nombre</dd>
+
+        <dt class="col-sm-3">DPI</dt>
+        <dd class="col-sm-9">@Model.DPI</dd>
+    </dl>
+</div>
+
+<a asp-action="Edit" asp-route-id="@Model.IdPersona" class="btn btn-warning mt-3">Editar</a>
+<a asp-action="Index" class="btn btn-secondary mt-3">Volver</a>

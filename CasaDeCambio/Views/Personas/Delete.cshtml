@@ -1,0 +1,25 @@
+﻿@model CasaDeCambio.Models.Persona
+
+@{
+    ViewData["Title"] = "Eliminar Persona";
+}
+
+<h2>Eliminar Persona</h2>
+
+<h5>¿Estás seguro que deseas eliminar este registro?</h5>
+
+<div class="card p-3 mt-3">
+    <dl class="row">
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">@Model.Nombre</dd>
+
+        <dt class="col-sm-3">DPI</dt>
+        <dd class="col-sm-9">@Model.DPI</dd>
+    </dl>
+</div>
+
+<form asp-action="Delete">
+    <input type="hidden" asp-for="IdPersona" />
+    <button type="submit" class="btn btn-danger mt-3">Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary mt-3">Cancelar</a>
+</form>

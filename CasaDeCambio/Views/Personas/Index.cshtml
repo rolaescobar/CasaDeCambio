@@ -1,37 +1,96 @@
-﻿@@model IEnumerable<CasaDeCambio.Models.Persona>
+﻿@model IEnumerable<CasaDeCambio.Models.Persona>
 
-    @{
-        ViewData["Title"] = "Personas";
-    }
+@{
+    ViewData["Title"] = "Personas";
+}
 
-    <h2>Listado de Personas</h2>
+<h2>Listado de Personas</h2>
 
-    <form method="get" asp-action="Index">
-        <input type="text" name="buscar" value="@Context.Request.Query["buscar"]" placeholder="Buscar por nombre o DPI..." class="form-control mb-3" />
-        <button type="submit" class="btn btn-primary">Buscar</button>
-        <a asp-action="Create" class="btn btn-success ms-2">Nueva Persona</a>
-    </form>
+<form method="get" asp-action="Index">
+    <input type="text"
+           name="buscar"
+           value="@Context.Request.Query["buscar"]"
+           placeholder="Buscar por nombre o DPI..."
+           class="form-control mb-3" />
+    <button type="submit" class="btn btn-primary">Buscar</button>
+    <a asp-action="Create" class="btn btn-success ms-2">Nueva Persona</a>
+</form>
 
-    <table class="table table-striped mt-3">
-        <thead>
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>DPI</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            var collapseId = $"cambios-{item.IdPersona}";
             <tr>
-                <th>Nombre</th>
-                <th>DPI</th>
-                <th>Acciones</th>
+                <td>@item.Nombre</td>
+                <td>@item.DPI</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.IdPersona" class="btn btn-info btn-sm">Detalles</a>
+                    <a asp-action="Edit" asp-route-id="@item.IdPersona" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@item.IdPersona" class="btn btn-danger btn-sm">Eliminar</a>
+
+                    <button type="button"
+                            class="btn btn-secondary btn-sm"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#@collapseId"
+                            aria-expanded="false"
+                            aria-controls="@collapseId">
+                        Cambios
+                    </button>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Nombre</td>
-                    <td>@item.DPI</td>
-                    <td>
-                        <a asp-action="Details" asp-route-id="@item.IdPersona" class="btn btn-info btn-sm">Detalles</a>
-                        <a asp-action="Edit" asp-route-id="@item.IdPersona" class="btn btn-warning btn-sm">Editar</a>
-                        <a asp-action="Delete" asp-route-id="@item.IdPersona" class="btn btn-danger btn-sm">Eliminar</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+
+            <!-- fila del acordeón -->
+            <tr>
+                <td colspan="3" class="p-0">
+                    <div class="collapse" id="@collapseId">
+                        <div class="card card-body">
+
+                            <div class="mb-2">
+                                <a asp-action="AddCambio"
+                                   asp-route-idPersona="@item.IdPersona"
+                                   class="btn btn-success btn-sm mb-2">
+                                    Agregar cambio
+                                </a>
+                            </div>
+
+                            @if (item.CambiosDivisas != null && item.CambiosDivisas.Any())
+                            {
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha/Hora</th>
+                                            <th>Monto Q</th>
+                                            <th>Monto US$</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var c in item.CambiosDivisas.OrderByDescending(c => c.FechaHoraCambio))
+                                        {
+                                            <tr>
+                                                <td>@c.FechaHoraCambio</td>
+                                                <td>@c.MontoQuetzales</td>
+                                                <td>@c.MontoDolares</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Esta persona no tiene cambios de divisas.</span>
+                            }
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
